@@ -17,13 +17,16 @@ def override_get_db():
     finally:
         db.close()
 
-app.dependency_overrides[get_db] = override_get_db
-
 @pytest.fixture(autouse=True)
 def setup_database():
+    # Set (and later clear) this module's DB override: the FastAPI app object
+    # is shared across test modules, so a module-level override would leak
+    # into other modules' tests (all modules are imported before any test runs).
+    app.dependency_overrides[get_db] = override_get_db
     Base.metadata.create_all(bind=engine)
     yield
     Base.metadata.drop_all(bind=engine)
+    app.dependency_overrides.clear()
 
 client = TestClient(app)
 
