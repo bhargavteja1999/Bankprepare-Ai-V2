@@ -16,6 +16,18 @@ export default function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();
 
+  const getErrorMessage = (err) => {
+    if (!err.response) {
+      return 'Cannot reach server. Make sure the backend is running at http://localhost:8000.';
+    }
+    const detail = err.response?.data?.detail;
+    if (typeof detail === 'string' && detail) return detail;
+    if (Array.isArray(detail)) {
+      return detail.map((d) => d.msg || JSON.stringify(d)).join(', ');
+    }
+    return 'Registration failed. Please try again.';
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -29,14 +41,14 @@ export default function Register() {
 
     try {
       await register({
-        email,
+        email: email.trim().toLowerCase(),
         password,
-        full_name: fullName,
+        full_name: fullName.trim(),
         target_exam: targetExam,
       });
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Registration failed. Please try again.');
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }

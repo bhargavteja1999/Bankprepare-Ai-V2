@@ -13,16 +13,28 @@ export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const getErrorMessage = (err) => {
+    if (!err.response) {
+      return 'Cannot reach server. Make sure the backend is running at http://localhost:8000.';
+    }
+    const detail = err.response?.data?.detail;
+    if (typeof detail === 'string' && detail) return detail;
+    if (Array.isArray(detail)) {
+      return detail.map((d) => d.msg || JSON.stringify(d)).join(', ');
+    }
+    return 'Invalid email or password. Please try again.';
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
-      await login(email, password);
+      await login(email.trim().toLowerCase(), password);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Invalid email or password. Please try again.');
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
