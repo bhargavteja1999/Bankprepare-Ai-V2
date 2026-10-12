@@ -1,10 +1,37 @@
 import axios from 'axios';
 
+/**
+ * Resolve the backend base URL.
+ *
+ * Production (Vercel): set `VITE_API_URL=https://bankprepare-ai-v2.onrender.com`
+ *   (bare host — `/api/v1` is appended automatically).
+ * Local dev fallback: `http://localhost:8000` (+ `/api/v1`).
+ *
+ * `VITE_API_BASE_URL` is still honoured as a legacy alias so existing
+ * checkouts keep working. A value that already ends with `/api/v1` is
+ * used as-is, so there is never a duplicated `/api` prefix.
+ */
+function resolveApiBaseUrl() {
+  const raw =
+    import.meta.env.VITE_API_URL ||
+    import.meta.env.VITE_API_BASE_URL ||
+    'http://localhost:8000';
+  const trimmed = String(raw).trim().replace(/\/+$/, '');
+  if (/\/api\/v1$/.test(trimmed)) {
+    return trimmed;
+  }
+  return `${trimmed}/api/v1`;
+}
+
+export const API_BASE_URL = resolveApiBaseUrl();
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1',
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  // Render free tier sleeps when idle (cold start can take ~30-60s).
+  timeout: 60000,
 });
 
 // Request interceptor: attach token

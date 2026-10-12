@@ -36,10 +36,12 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Set up CORS
+# Set up CORS — only the explicit allow-list (local dev + FRONTEND_URL set
+# on the host for the deployed Vercel frontend). Never "*" with credentials.
+_cors_origins = settings.allowed_origins if isinstance(settings.allowed_origins, list) else ["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS if isinstance(settings.CORS_ORIGINS, list) else ["*"],
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

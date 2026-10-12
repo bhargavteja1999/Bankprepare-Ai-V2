@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { API_BASE_URL } from '../../services/api';
 import Button from '../../components/common/Button';
 import { Mail, Lock, AlertCircle, ArrowRight } from 'lucide-react';
 
@@ -15,7 +16,10 @@ export default function Login() {
 
   const getErrorMessage = (err) => {
     if (!err.response) {
-      return 'Cannot reach server. Make sure the backend is running at http://localhost:8000.';
+      if (err.code === 'ECONNABORTED' || /timeout/i.test(err.message || '')) {
+        return 'The server is taking too long to respond (it may be waking up). Please wait a few seconds and try again.';
+      }
+      return `Cannot reach the server at ${API_BASE_URL}. If this persists, the backend may be waking up or unavailable — please try again shortly.`;
     }
     const detail = err.response?.data?.detail;
     if (typeof detail === 'string' && detail) return detail;
